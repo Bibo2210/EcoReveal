@@ -1,197 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Product Scanner - EcoReveal</title>
-  <link rel="stylesheet" href="styles/main.css"/>
-</head>
-<body>
-  <header class="site-header">
-    <div class="container header-inner">
-      <div class="brand">
-        <a class="brand-link" href="index.html"><span class="brand-logo">🌱</span><span class="brand-name">EcoReveal</span></a>
-      </div>
-      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span>
-      </button>
-      <nav class="site-nav" aria-label="Primary">
-        <ul>
-          <li><a href="features.html">Features</a></li>
-          <li class="active"><a href="product-scanner.html">Scanner</a></li>
-          <li><a href="green-alternatives.html">Alternatives</a></li>
-          <li><a href="resources.html">Resources</a></li>
-          <li><a href="about.html">About</a></li>
-          <li class="cta"><a href="contact.html">Get the App</a></li>
-        </ul>
-      </nav>
+  <head>
+    <meta charset="UTF-8" />
+    <title>EcoReveal - Product Scanner</title>
+    <link rel="stylesheet" href="styles/main.css" />
+  </head>
+  <body>
+    <h1>EcoReveal Product Scanner</h1>
+
+    <div class="scanner-container">
+      <input type="file" id="uploadInput" accept="image/*" style="display: none" />
+      <button id="uploadBtn" class="btn">Upload Image</button>
+      <button id="cameraBtn" class="btn">Use Camera</button>
+      <video id="cameraStream" autoplay playsinline style="display: none"></video>
+      <canvas id="cameraCanvas" style="display: none"></canvas>
     </div>
-  </header>
 
-  <main class="page container">
-    <h1>Product Scanner</h1>
-    <p>Upload a photo or enter text. Our on-device AI will generate an eco-report and, if edible, estimate nutrition.</p>
+    <button id="analyzeImageBtn" class="btn">Analyze</button>
+    <p id="scanResult">No image uploaded yet.</p>
 
-    <div class="scanner card">
-      <form id="scanForm" class="scan-form" novalidate>
-        <div class="input-row">
-          <label class="file-input">
-            \1 accept="image/*" style="display:none"\2
-            <span>Upload / Use Camera</span>
-          </label>
-          <div class="or">or</div>
-          <input type="text" id="textInput" placeholder="Describe the product (e.g., 'stainless steel water bottle 750ml')" />
-        </div>
-        <div class="input-row">
-          <label for="locationInput" class="sr-only">Location (optional)</label>
-          <input type="text" id="locationInput" placeholder="Location (optional, e.g., 'Seattle, WA')" />
-          <button type="submit" class="btn primary">Analyze</button>
-        </div>
-      </form>
+    <script src="scripts/ai.js"></script>
+    <script>
+      const uploadBtn = document.getElementById("uploadBtn");
+      const cameraBtn = document.getElementById("cameraBtn");
+      const uploadInput = document.getElementById("uploadInput");
+      const cameraStream = document.getElementById("cameraStream");
+      const cameraCanvas = document.getElementById("cameraCanvas");
+      const analyzeImageBtn = document.getElementById("analyzeImageBtn");
+      const scanResult = document.getElementById("scanResult");
 
-      <div id="scanOutput" class="result-card" aria-live="polite"></div>
+      let currentImage = null;
 
-      <div class="actions-row">
-        <button id="saveResultBtn" class="btn" disabled>Save to History</button>
-        <a class="btn ghost" href="scan-history.html">View History</a>
-      </div>
-    </div>
-  
-<!-- Added by ChatGPT: separate Upload and Use Camera buttons -->
-<div class="scan-actions" style="margin: 1rem 0; display: flex; gap: .75rem; flex-wrap: wrap;">
-  <button id="btn-upload" class="btn">Upload</button>
-  <input id="file-input" type="file" accept="image/*" style="display:none" />
-  <button id="btn-camera" class="btn">Use Camera</button>
-  <button id="btn-capture" class="btn" style="display:none">Capture</button>
-</div>
-
-<video id="camera-preview" autoplay playsinline style="display:none; width: 100%; max-width: 420px; border-radius: 12px;"></video>
-<canvas id="snapshot-canvas" style="display:none"></canvas>
-
-<script>
-  (function () {
-    const uploadBtn = document.getElementById('btn-upload');
-    const fileInput = document.getElementById('file-input');
-    const camBtn = document.getElementById('btn-camera');
-    const captureBtn = document.getElementById('btn-capture');
-    const video = document.getElementById('camera-preview');
-    const canvas = document.getElementById('snapshot-canvas');
-
-    const statusEl = document.querySelector('[data-scan-status]') || document.createElement('div');
-    statusEl.dataset.scanStatus = '1';
-    if (!statusEl.parentNode) document.body.prepend(statusEl);
-
-    function setStatus(msg) {
-      statusEl.textContent = msg;
-    }
-
-    async function analyzeImageBlob(blob, name='camera.jpg') {
-      try {
-        setStatus('Analyzing…');
-        const result = await window.EcoAI.analyze({ image: blob, imageName: name, text: '', location: '' });
-        setStatus('Done');
-        // Dispatch a custom event so existing app.js UI can pick it up if it listens,
-        // otherwise, just dump JSON for now.
-        document.dispatchEvent(new CustomEvent('EcoAI:result', { detail: result }));
-        const outlet = document.querySelector('[data-scan-output]') || document.getElementById('scan-output');
-        if (outlet) {
-          outlet.textContent = JSON.stringify(result, null, 2);
+      // Upload flow
+      uploadBtn.addEventListener("click", () => uploadInput.click());
+      uploadInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            currentImage = reader.result;
+            scanResult.textContent = "Image uploaded. Ready to analyze.";
+          };
+          reader.readAsDataURL(file);
         }
-      } catch (e) {
-        console.error(e);
-        setStatus('Error analyzing. Please try again');
-        alert('Error analyzing. Check console for details.');
-      }
-    }
+      });
 
-    uploadBtn?.addEventListener('click', () => fileInput.click());
-    fileInput?.addEventListener('change', () => {
-      const file = fileInput.files && fileInput.files[0];
-      if (file) analyzeImageBlob(file, file.name || 'upload.jpg');
-    });
+      // Camera flow
+      cameraBtn.addEventListener("click", async () => {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          cameraStream.srcObject = stream;
+          cameraStream.style.display = "block";
+        } else {
+          alert("Camera not supported on this device.");
+        }
+      });
 
-    let stream = null;
-    camBtn?.addEventListener('click', async () => {
-      if (stream) {
-        // If already active, stop it
-        stream.getTracks().forEach(t => t.stop());
-        stream = null;
-        video.style.display = 'none';
-        captureBtn.style.display = 'none';
-        camBtn.textContent = 'Use Camera';
-        return;
-      }
-      try {
-        setStatus('Opening camera…');
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
-        video.srcObject = stream;
-        video.style.display = 'block';
-        captureBtn.style.display = 'inline-block';
-        camBtn.textContent = 'Close Camera';
-        setStatus('Camera ready. Tap Capture.');
-      } catch (e) {
-        console.error(e);
-        alert('Could not access camera. Check permissions.');
-        setStatus('');
-      }
-    });
+      analyzeImageBtn.addEventListener("click", async () => {
+        if (cameraStream.style.display === "block") {
+          // Capture from camera
+          const ctx = cameraCanvas.getContext("2d");
+          cameraCanvas.width = cameraStream.videoWidth;
+          cameraCanvas.height = cameraStream.videoHeight;
+          ctx.drawImage(cameraStream, 0, 0);
+          currentImage = cameraCanvas.toDataURL("image/jpeg");
+        }
 
-    captureBtn?.addEventListener('click', async () => {
-      if (!stream) return;
-      const track = stream.getVideoTracks()[0];
-      const settings = track.getSettings();
-      const w = settings.width || 640;
-      const h = settings.height || 480;
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, w, h);
-      canvas.toBlob((blob) => {
-        if (blob) analyzeImageBlob(blob, 'camera.jpg');
-      }, 'image/jpeg', 0.9);
-    });
-  })();
-</script>
-</main>
+        if (!currentImage) {
+          scanResult.textContent = "Please upload or capture an image first.";
+          return;
+        }
 
-  <footer class="site-footer">
-    <div class="container footer-grid">
-      <div>
-        <h3>Resources</h3>
-        <ul>
-          <li><a href="sustainability-tips.html">Sustainability Tips</a></li>
-          <li><a href="eco-blog.html">Eco Blog</a></li>
-          <li><a href="faqs.html">FAQs</a></li>
-        </ul>
-      </div>
-      <div>
-        <h3>About</h3>
-        <ul>
-          <li><a href="team.html">Team</a></li>
-          <li><a href="about.html">EcoReveal</a></li>
-        </ul>
-      </div>
-      <div>
-        <h3>Features</h3>
-        <ul>
-          <li><a href="product-scanner.html">Product Scanner</a></li>
-          <li><a href="scan-history.html">Scan History</a></li>
-          <li><a href="green-alternatives.html">Green Alternatives</a></li>
-        </ul>
-      </div>
-      <div>
-        <h3>Contact</h3>
-        <ul>
-          <li><a href="contact.html">Get in Touch</a></li>
-        </ul>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2025 EcoReveal | Built for a greener future 🌍</p>
-      </div>
-    </div>
-  </footer>
-
-  <script src="scripts/ai.js"></script>
-  <script src="scripts/app.js"></script>
-</body>
+        scanResult.textContent = "Analyzing...";
+        const explanation = await EcoAI.explain(currentImage, "image");
+        scanResult.textContent = explanation;
+      });
+    </script>
+  </body>
 </html>
