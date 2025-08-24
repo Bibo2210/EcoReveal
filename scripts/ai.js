@@ -1,82 +1,72 @@
-/*
-  ai.js — Real in-browser AI using Transformers.js (no API keys, free)
-  - Text: zero-shot classification (Xenova/distilbert-base-uncased-mnli)
-  - Image: image classification (Xenova/vit-base-patch16-224)
-*/
+// scripts/ai.js
+// Real AI integration using Hugging Face Inference API
+// Replace with your free Hugging Face API key
+const HUGGING_FACE_API_KEY = "YOUR_HF_API_KEY_HERE";
 
-;(() => {
-  const EcoAI = {};
-  window.EcoAI = EcoAI;
+// Text model (free small model for demonstration)
+const TEXT_MODEL = "google/flan-t5-small";
 
-  let _pipelinesPromise = null;
-  async function ensurePipelines() {
-    if (_pipelinesPromise) return _pipelinesPromise;
-    _pipelinesPromise = (async () => {
-      // Load transformers.js at runtime
-      if (!window.transformers) {
-        await new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          s.src = 'https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/transformers.min.js';
-          s.async = true;
-          s.onload = resolve;
-          s.onerror = () => reject(new Error('Failed to load Transformers.js'));
-          document.head.appendChild(s);
-        });
-      }
-      const { pipeline, env } = window.transformers;
-      env.allowLocalModels = false;
-      env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/@xenova/transformers/dist/';
+// Image model (image captioning to turn image → text)
+const IMAGE_MODEL = "nlpconnect/vit-gpt2-image-captioning";
 
-      const textClassifier  = await pipeline('zero-shot-classification', 'Xenova/distilbert-base-uncased-mnli');
-      const imageClassifier = await pipeline('image-classification',       'Xenova/vit-base-patch16-224');
-      return { textClassifier, imageClassifier };
-    })();
-    return _pipelinesPromise;
-  }
-
-  // …helpers (keywords, edible decision, nutrition & eco heuristics)…
-
-  /**
-   * Main entry – works for both quick text and scanner (text + image).
-   * @param {{ text?: string, image?: File|Blob|HTMLImageElement|string, imageName?: string, location?: string }} input
-   */
-  EcoAI.analyze = async function analyze(input = {}) {
-    const { textClassifier, imageClassifier } = await ensurePipelines();
-
-    const text = (input.text || '').trim();
-    const textOut = text ? await textClassifier(text, ['food product','drink','fruit','vegetable','snack','dairy','meat','cosmetic','cleaning product','electronic device','toy','clothing','medication','plastic packaging','battery']) : null;
-    const textTop = Array.isArray(textOut?.labels) ? { label: textOut.labels[0], score: textOut.scores[0] } : null;
-
-    let imageTop = null;
-    if (input.image) {
-      const imgRes = await imageClassifier(input.image, { topk: 5 });
-      imageTop = Array.isArray(imgRes) && imgRes.length ? imgRes[0] : null;
+async function queryText(prompt) {
+  const response = await fetch(
+    `https://api-inference.huggingface.co/models/${TEXT_MODEL}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${HUGGING_FACE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ inputs: prompt }),
     }
+  );
+  if (!response.ok) throw new Error("Text model request failed");
+  const result = await response.json();
+  return result[0]?.generated_text || "No response from AI.";
+}
 
-    // Decide edibility using model hints + keywords
-    // (nutrition/eco/alternatives/tips derived from coarse label)
-    // …building the same shape your UI expects…
+async function queryImage(imageBase64) {
+  // Convert base64 to blob
+  const binary = atob(imageBase64.split(",")[1]);
+  const array = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    array[i] = binary.charCodeAt(i);
+  }
+  const blob = new Blob([array], { type: "image/jpeg" });
 
-    return {
-      input: { text, imageName: input.imageName || '', location: input.location || '' },
-      model: { textTop, imageTop },
-      edible: { /* isEdible, confidence, explain */ },
-      nutrition: /* or null */,
-      eco: /* assessment */,
-      alternatives: /* array */,
-      tips: /* array */,
-      overallConfidence: /* 0–100 */
-    };
-  };
+  const response = await fetch(
+    `https://api-inference.huggingface.co/models/${IMAGE_MODEL}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${HUGGING_FACE_API_KEY}`,
+      },
+      body: blob,
+    }
+  );
+  if (!response.ok) throw new Error("Image model request failed");
+  const result = await response.json();
+  return result[0]?.generated_text || "No description available.";
+}
 
-  // Used by renderResult() in app.js
-  EcoAI.explain = function explain(res){
+// Main API exposed to rest of app
+const EcoAI = {
+  async explain(input, type = "text") {
     try {
-      const lines = [];
-      if (res?.model?.textTop)  lines.push(`Text suggests: "${res.model.textTop.label}" (${Math.round(res.model.textTop.score*100)}%)`);
-      if (res?.model?.imageTop) lines.push(`Image suggests: "${res.model.imageTop.label}" (${Math.round(res.model.imageTop.score*100)}%)`);
-      if (res?.edible)          lines.push(`Edible decision: ${res.edible.isEdible ? 'likely edible' : 'likely not edible'} (conf ${res.edible.confidence}%)`);
-      return lines.length ? lines.join(' • ') : 'No model signals available.';
-    } catch { return 'Explanation unavailable.'; }
-  };
-})();
+      if (type === "text") {
+        return await queryText(input);
+      } else if (type === "image") {
+        // Convert image to description text first
+        const desc = await queryImage(input);
+        // Then send description to text model for eco analysis
+        return await queryText(
+          `Analyze the environmental impact of this product: ${desc}`
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      return "Error analyzing. Please try again.";
+    }
+  },
+};
