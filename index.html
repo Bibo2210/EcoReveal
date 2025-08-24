@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EcoReveal - Your Pocket Sustainability Advisor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/main.css"/>
+  <meta name="description" content="Scan any product to reveal environmental impact, nutrition details, and eco-friendly alternatives—all in one app."/>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <a class="brand-link" href="index.html" aria-label="EcoReveal Home">
+          <span class="brand-logo" aria-hidden="true">🌱</span>
+          <span class="brand-name">EcoReveal</span>
+        </a>
+      </div>
+      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <nav class="site-nav" aria-label="Primary">
+        <ul>
+          <li><a href="features.html">Features</a></li>
+          <li><a href="product-scanner.html">Scanner</a></li>
+          <li><a href="green-alternatives.html">Alternatives</a></li>
+          <li><a href="resources.html">Resources</a></li>
+          <li><a href="about.html">About</a></li>
+          <li class="cta"><a href="contact.html">Get the App</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <h1>Scan smarter. Live greener.</h1>
+          <p>Instant eco-reports, ethical sourcing, recycling info, and nutrition insights for edible items—plus personalized greener alternatives.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="product-scanner.html">Start Scanning</a>
+            <a class="btn ghost" href="features.html">See How It Works</a>
+          </div>
+          <ul class="hero-highlights">
+            <li>AI-powered edible detection</li>
+            <li>Eco impact & recyclability scores</li>
+            <li>Nutrition estimates for foods</li>
+            <li>Personalized green tips</li>
+          </ul>
+        </div>
+        <div class="hero-card" aria-hidden="true">
+          <div class="scan-card">
+            <div class="scan-thumb">
+              <div class="scan-placeholder">📦</div>
+            </div>
+            <div class="scan-meta">
+              <div class="scan-title">Sample: Plastic Bottle</div>
+              <div class="scan-badges">
+                <span class="badge warn">Carbon: High</span>
+                <span class="badge ok">Recyclable</span>
+              </div>
+              <div class="scan-insight">Try: Stainless steel bottle</div>
+            </div>
+          </div>
+          <div class="scan-card">
+            <div class="scan-thumb">
+              <div class="scan-placeholder">🥫</div>
+            </div>
+            <div class="scan-meta">
+              <div class="scan-title">Sample: Canned Beans</div>
+              <div class="scan-badges">
+                <span class="badge good">Carbon: Low</span>
+                <span class="badge ok">Recyclable</span>
+              </div>
+              <div class="scan-insight">Note: Protein-rich, fiber-dense</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="quick-scan">
+      <div class="container">
+        <h2>Try a Quick Text Scan</h2>
+        <p>Type a product name or paste packaging details. Our on-device AI will generate a fast eco-report.</p>
+        <form class="quick-scan-form" id="quickScanForm" novalidate>
+          <label for="quickInput" class="sr-only">Product name or description</label>
+          <input id="quickInput" name="q" type="text" placeholder="e.g., '500ml PET water bottle' or 'oat milk carton'"/>
+          <button type="submit" class="btn primary">Analyze</button>
+        </form>
+
+        <div id="quickScanResult" class="result-card" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="features-preview">
+      <div class="container grid-3">
+        <div class="feature-tile">
+          <div class="tile-icon">🤖</div>
+          <h3>AI you can trust</h3>
+          <p>Transparent reasoning, confidence scores, and adjustable assumptions. Swap in your own API later.</p>
+          <a href="features.html" class="tile-link">Learn more</a>
+        </div>
+        <div class="feature-tile">
+          <div class="tile-icon">🍎</div>
+          <h3>Nutrition + Sustainability</h3>
+          <p>For edible items, see calories, macros, and key minerals with planet-friendly guidance.</p>
+          <a href="product-scanner.html" class="tile-link">Scan a food</a>
+        </div>
+        <div class="feature-tile">
+          <div class="tile-icon">🔄</div>
+          <h3>Recyclability clarity</h3>
+          <p>Know what to recycle, how to prep it, and find local options.</p>
+          <a href="resources.html" class="tile-link">See resources</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container cta-inner">
+        <h2>Ready to reveal greener choices?</h2>
+        <p>Start with 5 free scans. No account required.</p>
+        <a class="btn inverse" href="product-scanner.html">Open Scanner</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <h3>Resources</h3>
+        <ul>
+          <li><a href="sustainability-tips.html">Sustainability Tips</a></li>
+          <li><a href="eco-blog.html">Eco Blog</a></li>
+          <li><a href="faqs.html">FAQs</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>About</h3>
+        <ul>
+          <li><a href="team.html">Team</a></li>
+          <li><a href="about.html">EcoReveal</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Features</h3>
+        <ul>
+          <li><a href="product-scanner.html">Product Scanner</a></li>
+          <li><a href="scan-history.html">Scan History</a></li>
+          <li><a href="green-alternatives.html">Green Alternatives</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Contact</h3>
+        <ul>
+          <li><a href="contact.html">Get in Touch</a></li>
+        </ul>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 EcoReveal | Built for a greener future 🌍</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="scripts/ai.js"></script>
+  <script src="scripts/app.js"></script>
+</body>
+</html>
